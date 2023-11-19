@@ -1,8 +1,8 @@
+const carrinho = [];
 fetch('https://fakestoreapi.com/products?limit=5')
     .then(res => res.json())
     .then(data => {
         const produtosContainer = document.getElementById('produtos-container');
-        const carrinho = [];
 
         data.forEach(produto => {
             const produtoDiv = document.createElement('div');
@@ -14,7 +14,7 @@ fetch('https://fakestoreapi.com/products?limit=5')
                             <p class="descricao-produto"><strong>Descrição:</strong> ${produto.description} </p>
                             <img src="${produto.image}" alt="${produto.title}" class="imagem_produto">
                             <hr>
-                            <button>Comprar</button>
+                            <button class="buy-btn" id="buy${produto.id}">Comprar</button>
                         </div>
                     `;
 
@@ -24,8 +24,27 @@ fetch('https://fakestoreapi.com/products?limit=5')
             let $output = produtosContainer.querySelector('.output');
             let $btnFechar = $output.querySelector('#fechar');
             let $btnComprar = produtoDiv.querySelector('button');
-            $valorTotal = $output.querySelector('#valorTotal');
+            let $btnCarrinho = document.querySelector('#btn-carrinho');
+            // let $valorTotal = $output.querySelector('#valorTotal');
             let $informacoesCarrinho = $output.querySelector('#informacoesCarrinho');
+
+            //--------- eventos ao clicar nos botões -------------------------------------------------------
+            $btnComprar.addEventListener('click', function () {
+                const produtoId = this.id.replace('buy', ''); // Obtém o ID do produto
+                const produtoClicado = data.find(produto => produto.id == produtoId);
+                console.log(addAoCarrinho(produtoClicado));
+                atualizarCarrinho();
+            });
+
+            $btnFechar.addEventListener('click', function () {
+                fecharCarrinho();
+            });
+
+            $btnCarrinho.addEventListener('click', function(){
+                abrirCarrinho();
+            })
+            
+            //----- funções ------------------------------------------------------------------------------------------
 
             function addAoCarrinho(produto) {
                 const itemExistenteIndex = carrinho.findIndex(item => item.produto.title === produto.title);
@@ -33,20 +52,19 @@ fetch('https://fakestoreapi.com/products?limit=5')
                 if (itemExistenteIndex !== -1) {
                     carrinho[itemExistenteIndex].quantidade++;
                     carrinho[itemExistenteIndex].valorTotal += produto.price;
-                    atualizarCarrinho()
                 } else {
                     carrinho.push({
                         produto: produto,
                         quantidade: 1,
                         valorTotal: produto.price,
                     });
-                    atualizarCarrinho()
                 }
             }
 
             function atualizarCarrinho() {
-                $output.style.display = 'block';
-    
+                abrirCarrinho()
+                $informacoesCarrinho.innerHTML = ''; // Limpar o conteúdo anterior
+            
                 let valorTotalCarrinho = 0;
             
                 carrinho.forEach(item => {
@@ -54,29 +72,26 @@ fetch('https://fakestoreapi.com/products?limit=5')
                     prodCarrinho.innerHTML = `
                         <h4>${item.produto.title}</h4>
                         <p>Quantidade: ${item.quantidade}</p>
-                        <p>Valor total: ${item.valorTotal}</p>
                     `;
             
                     $informacoesCarrinho.appendChild(prodCarrinho);
             
-                    Math.floor(parseFloat(valorTotalCarrinho += item.valorTotal));
+                    valorTotalCarrinho += item.valorTotal;
                 });
             
-                $valorTotal.textContent = `Valor total: ${valorTotalCarrinho}`;
+                const totalCart = document.createElement('p');
+                totalCart.innerHTML = `<p>Valor total: ${valorTotalCarrinho.toFixed(2)}</p>`;
+                $informacoesCarrinho.appendChild(totalCart);
             }
-            console.log(carrinho)
 
-            $btnComprar.addEventListener('click', function () {
-                console.log(this)
-                addAoCarrinho(produto);
-       
-            });
+            function fecharCarrinho() {
+                $output.style.display = 'none';//esconde o carrinho
+            }
 
-            $btnFechar.addEventListener('click', function(){
-                $output.style.display = 'none';
-            })
+            function abrirCarrinho() {
+                $output.style.display = 'block';
+            }
         });
     })
 
     .catch(error => console.error('Erro ao obter dados da API:', error));
-//-----------------------------------------------------------------------------------
